@@ -64,7 +64,7 @@ wandb_run_name = 'cluster' + str(time.time())
 dataset = 'shakespeare'
 gradient_accumulation_steps = 32 # used to simulate larger batch sizes
 batch_size = 12 # if gradient_accumulation_steps > 1, this is the micro-batch size
-block_size = 64
+block_size = 1024
 # model
 n_layer = 4
 n_head = 4
