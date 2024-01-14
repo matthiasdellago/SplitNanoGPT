@@ -5,6 +5,7 @@ from model import LayerNorm, MLP, GPT, GPTConfig, CausalSelfAttention, Block
 from copy import deepcopy
 import inspect
 import math
+import torch.nn.functional as F
 
 class SplitAttention(nn.Module):
     """
