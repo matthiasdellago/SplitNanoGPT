@@ -50,9 +50,9 @@ qk_weight_decay = 0.1
 # default config values designed to train a gpt2 (124M) on OpenWebText
 # I/O
 out_dir = 'out-shakespeare'
-eval_interval = 5
-log_interval = 5
-eval_iters = 40
+eval_interval = 200
+log_interval = 10
+eval_iters = 100
 eval_only = False # if True, script exits right after the first eval
 always_save_checkpoint = False # if True, always save a checkpoint after each eval
 init_from = 'gpt2' # 'scratch' or 'resume' or 'gpt2*'
@@ -63,7 +63,7 @@ wandb_run_name = 'cluster' + str(time.time())
 # data
 dataset = 'shakespeare'
 gradient_accumulation_steps = 32 # used to simulate larger batch sizes
-batch_size = 1 # if gradient_accumulation_steps > 1, this is the micro-batch size
+batch_size = 12 # if gradient_accumulation_steps > 1, this is the micro-batch size
 block_size = 64
 # model
 n_layer = 4
@@ -73,7 +73,7 @@ dropout = 0.0 # for pretraining 0 is good, for finetuning try 0.1+
 bias = False # do we use bias inside LayerNorm and Linear layers?
 # adamw optimizer
 learning_rate = 3e-5 # max learning rate
-max_iters = 20 # total number of training iterations
+max_iters = 5000 # total number of training iterations
 weight_decay = 0.1
 beta1 = 0.9
 beta2 = 0.99
