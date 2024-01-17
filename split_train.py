@@ -50,8 +50,8 @@ qk_weight_decay = 0.1
 # default config values designed to train a gpt2 (124M) on OpenWebText
 # I/O
 out_dir = 'out-shakespeare'
-eval_interval = 200
-log_interval = 10
+eval_interval = 10
+log_interval = 1
 eval_iters = 100
 eval_only = False # if True, script exits right after the first eval
 always_save_checkpoint = False # if True, always save a checkpoint after each eval
@@ -59,7 +59,7 @@ init_from = 'gpt2' # 'scratch' or 'resume' or 'gpt2*'
 # wandb logging
 wandb_log = True # disabled by default 
 wandb_project = 'shakespeare-finetune'
-wandb_run_name = 'cluster' + str(time.time())
+wandb_run_name = 'cluster'
 # data
 dataset = 'shakespeare'
 gradient_accumulation_steps = 32 # used to simulate larger batch sizes
@@ -99,13 +99,16 @@ exec(open('configurator.py').read()) # overrides from command line or config fil
 # ####################################   MODDED   ############################################
 
 # prepend weight_decay_ to the run name
-wandb_run_name = 'w_dec=' + str(weight_decay) + '_' + wandb_run_name
+wandb_run_name = 'w-dec=' + str(weight_decay) + '_' + wandb_run_name
+
+# make the name unique by appending the time with minute precision
+wandb_run_name += '_' + time.strftime("%m-%d_%H-%M")
 
 # prepend split_ and qk_weight_decay_ to the run name if split is True
 if split:
-    wandb_run_name = 'split:' + 'qk_dec=' + str(qk_weight_decay) + '_' + wandb_run_name
+    wandb_run_name = 'split:' + 'qk-dec=' + str(qk_weight_decay) + '_' + wandb_run_name
 else:
-    wandb_run_name = 'nosplit_' + wandb_run_name
+    wandb_run_name = 'nosplit:' + wandb_run_name
 
 config = {k: globals()[k] for k in config_keys} # will be useful for logging
 # ##################################   END MODDED   ############################################
