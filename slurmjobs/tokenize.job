@@ -3,13 +3,13 @@
 # Run with sbatch tokenize.job
 
 #SBATCH --job-name=tokenize      # Set the job name
-#SBATCH --time=23:00:00          # Set the time limit for the job, here 12 hours
+#SBATCH --time=23:00:00          # Set the time limit for the job, here 23 hours
 #SBATCH --mem=30G                # Request 30GB of memory
 #SBATCH --cpus-per-task=12       # Request 12 CPU cores
-#SBATCH --output=/home/mdellag/SplitNanoGPTdata/openwebtext/%x-%j-tokenize.out  # Direct the standard output to a log file
-#SBATCH --error=/home/mdellag/SplitNanoGPTdata/openwebtext/%x-%j-tokenize.err   # Direct the standard error to a log file
+#SBATCH --output=/home/mdellag/SplitNanoGPT/data/openwebtext/%x-%j-tokenize.out  # Direct the standard output to a log file
+#SBATCH --error=/home/mdellag/SplitNanoGPT/data/openwebtext/%x-%j-tokenize.err   # Direct the standard error to a log file
 
-cd /home/mdellag/SplitNanoGPTdata/openwebtext
+cd /home/mdellag/SplitNanoGPT/data/openwebtext
 
 # Environment setup
 source /home/mdellag/miniconda3/etc/profile.d/conda.sh  # Initialize Conda
@@ -17,4 +17,4 @@ conda deactivate                                          # Deactivate any exist
 conda activate nanoGPTenv                                 # Activate the desired Conda environment
 
 # Run the script, redirecting all output to a log file.
-python /home/mdellag/SplitNanoGPTdata/openwebtext/prepare.py
+python /home/mdellag/SplitNanoGPT/data/openwebtext/prepare.py
