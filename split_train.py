@@ -48,8 +48,10 @@ qk_weight_decay = 0.1
 
 # -----------------------------------------------------------------------------
 # default config values designed to train a gpt2 (124M) on OpenWebText
+# data
+dataset = 'openwebtext'
 # I/O
-out_dir = 'out-shakespeare'
+out_dir = 'out-' + dataset
 eval_interval = 10
 log_interval = 1
 eval_iters = 100
@@ -58,10 +60,9 @@ always_save_checkpoint = False # if True, always save a checkpoint after each ev
 init_from = 'gpt2' # 'scratch' or 'resume' or 'gpt2*'
 # wandb logging
 wandb_log = True # disabled by default 
-wandb_project = 'shakespeare-finetune'
-wandb_run_name = 'cluster'
-# data
-dataset = 'shakespeare'
+wandb_project = dataset + '-finetune'
+wandb_run_name = 'default-run-name'
+
 gradient_accumulation_steps = 32 # used to simulate larger batch sizes
 batch_size = 12 # if gradient_accumulation_steps > 1, this is the micro-batch size
 block_size = 1024
