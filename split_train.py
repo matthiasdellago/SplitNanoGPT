@@ -314,23 +314,26 @@ while True:
     # evaluate the loss on train/val sets and write checkpoints
     if iter_num % eval_interval == 0 and master_process:
         losses = estimate_loss()
-        # ####################################   MODDED   ############################################
-        if split:
-            beta = model.get_average_beta().item() #convert to float from tensor
-        else:
-            beta = None
-            # TODO: wrap with SplitGPTWrapper, then call get_average_beta()
-                
+   
         print(f"step {iter_num}: train loss {losses['train']:.4f}, val loss {losses['val']:.4f}, beta {beta:.4e}, lr {lr:.4e}")
         if wandb_log:
-            wandb.log({
+            # ####################################   MODDED   ############################################
+            log_data ={
                 "iter": iter_num,
                 "train/loss": losses['train'],
                 "val/loss": losses['val'],
                 "beta": beta,
                 "lr": lr,
                 "mfu": running_mfu*100, # convert to percentage
-            })
+            }
+            # Add beta only if split is True
+            if split:
+                log_data["beta"] = model.get_average_beta().item()  # convert to float from tensor
+            #log to wandb
+            wandb.log(log_data)
+            # ##################################   END MODDED   ############################################
+
+
         if losses['val'] < best_val_loss or always_save_checkpoint:
             best_val_loss = losses['val']
             if iter_num > 0:
