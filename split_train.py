@@ -322,7 +322,6 @@ while True:
                 "iter": iter_num,
                 "train/loss": losses['train'],
                 "val/loss": losses['val'],
-                "beta": beta,
                 "lr": lr,
                 "mfu": running_mfu*100, # convert to percentage
             }
