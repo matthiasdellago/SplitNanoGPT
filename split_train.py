@@ -63,8 +63,8 @@ wandb_log = True # disabled by default
 wandb_project = dataset + '-finetune'
 wandb_run_name = 'default-run-name'
 
-gradient_accumulation_steps = 32 # used to simulate larger batch sizes
-batch_size = 12 # if gradient_accumulation_steps > 1, this is the micro-batch size
+gradient_accumulation_steps = 10 # used to simulate larger batch sizes
+batch_size = 6 # if gradient_accumulation_steps > 1, this is the micro-batch size
 block_size = 1024
 # model
 n_layer = 4
