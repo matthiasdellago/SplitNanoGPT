@@ -315,7 +315,8 @@ while True:
     if iter_num % eval_interval == 0 and master_process:
         losses = estimate_loss()
    
-        print(f"step {iter_num}: train loss {losses['train']:.4f}, val loss {losses['val']:.4f}, beta {beta:.4e}, lr {lr:.4e}")
+        print(f"step {iter_num}: train loss {losses['train']:.4f}, val loss {losses['val']:.4f}, lr {lr:.4e}")
+                
         if wandb_log:
             # ####################################   MODDED   ############################################
             log_data ={
