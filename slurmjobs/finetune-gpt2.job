@@ -2,7 +2,7 @@
 
 #SBATCH --job-name=finetune-gpt2          # Name of the job, will appear in monitoring tools
 #SBATCH --array=0-4%5                     # Create a job array with indices 0 to 4, with a maximum of 5 jobs running concurrently
-#SBATCH --time=00:30:00                   # Set a time limit for each job in the array (2 hours here)
+#SBATCH --time=48:00:00                   # Set a time limit for each job in the array (2 hours here)                  # Set a time limit for each job in the array (2 hours here)
 #SBATCH --mem=20G                         # Request 20GB of memory for each job
 #SBATCH --cpus-per-task=4                 # Request 4 CPU cores per task
 #SBATCH --gres=gpu:1                      # Request 1 GPU per job (general resource scheduling)
