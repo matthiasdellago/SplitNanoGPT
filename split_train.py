@@ -64,7 +64,7 @@ wandb_project = dataset + '-finetune'
 wandb_run_name = 'default-run-name'
 
 gradient_accumulation_steps = 10 # used to simulate larger batch sizes
-batch_size = 6 # if gradient_accumulation_steps > 1, this is the micro-batch size
+batch_size = 3 # if gradient_accumulation_steps > 1, this is the micro-batch size
 block_size = 1024
 # model
 n_layer = 4
@@ -316,7 +316,7 @@ while True:
         losses = estimate_loss()
    
         print(f"step {iter_num}: train loss {losses['train']:.4f}, val loss {losses['val']:.4f}, lr {lr:.4e}")
-                
+
         if wandb_log:
             # ####################################   MODDED   ############################################
             log_data ={
