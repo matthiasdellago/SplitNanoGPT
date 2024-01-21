@@ -1,0 +1,46 @@
+#!/bin/bash
+
+#SBATCH --job-name=finetune-gpt2          # Name of the job, will appear in monitoring tools
+#SBATCH --array=0-1%2                  # Create a job array with indices 0 to 4, with a maximum of 5 jobs running concurrently
+#SBATCH --time=7-00:00:00                   # Set a time limit for each job in the array (2 hours here)                  # Set a time limit for each job in the array (2 hours here)
+#SBATCH --mem=20G                         # Request 20GB of memory for each job
+#SBATCH --cpus-per-task=4                 # Request 4 CPU cores per task
+#SBATCH --gres=gpu:1                      # Request 1 GPU per job (general resource scheduling)
+#SBATCH --output=/home/mdellag/SplitNanoGPT/logs/%x-%A-%a.out  # Standard output log file; %x is job name, %A is job ID, %a is array index
+#SBATCH --error=/home/mdellag/SplitNanoGPT/logs/%x-%A-%a.err   # Standard error log file; %x is job name, %A is job ID, %a is array index
+
+# Reasonable range of qk_weight_decay values yielded no significant difference in perplexity
+# Let's try some extreme values, if perplexity is still the same, then something strange is afoot!
+
+# Define decay values as variables
+WEIGHT_DECAY=0.1
+QK_WEIGHT_DECAY=0.0
+QK_WEIGHT_DECAY_VANILLA=0.1
+QK_WEIGHT_DECAY_HIGH=100.0
+QK_WEIGHT_DECAY_NEGATIVE=-100.0
+
+# Arguments for each training scenario
+args=(
+  # control3: Train split model with high qk_weight_decay=0.5 and weight_decay=0.1
+  "--split=True --wandb_run_name=split-high-decay --weight_decay=$WEIGHT_DECAY --qk_weight_decay=$QK_WEIGHT_DECAY_HIGH"
+
+  # control4: Train split model with negative qk_weight_decay=-0.1 and weight_decay=0.1
+  "--split=True --wandb_run_name=split-negative-decay --weight_decay=$WEIGHT_DECAY --qk_weight_decay=$QK_WEIGHT_DECAY_NEGATIVE"
+)
+
+cd /home/mdellag/SplitNanoGPT/
+
+# Environment setup
+source /home/mdellag/miniconda3/etc/profile.d/conda.sh  # Initialize Conda
+conda deactivate                                          # Deactivate any existing environment
+conda activate nanoGPTenv                                 # Activate the desired Conda environment
+
+
+# Extract the specific command based on the SLURM array task ID
+command="python3 /home/mdellag/SplitNanoGPT/split_train.py ${args[$SLURM_ARRAY_TASK_ID]}"
+
+# Echo the command to stdout for transparency
+echo "Running command: $command"
+
+# Execute the command
+$command
