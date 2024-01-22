@@ -1,8 +1,8 @@
 #!/bin/bash
 
-#SBATCH --job-name=from-scratch          # Name of the job, will appear in monitoring tools
+#SBATCH --job-name=from-scratch-sweep     # Name of the job, will appear in monitoring tools
 #SBATCH --array=0-4%5                     # Create a job array with indices 0 to 4, with a maximum of 5 jobs running concurrently
-#SBATCH --time=7-00:00:00                   # Set a time limit for each job in the array (2 hours here)                  # Set a time limit for each job in the array (2 hours here)
+#SBATCH --time=7-00:00:00                 # Set a time limit for each job in the array (2 hours here)                  # Set a time limit for each job in the array (2 hours here)
 #SBATCH --mem=20G                         # Request 20GB of memory for each job
 #SBATCH --cpus-per-task=4                 # Request 4 CPU cores per task
 #SBATCH --gres=gpu:1                      # Request 1 GPU per job (general resource scheduling)
@@ -10,8 +10,8 @@
 #SBATCH --error=/home/mdellag/SplitNanoGPT/logs/%x-%A-%a.err   # Standard error log file; %x is job name, %A is job ID, %a is array index
 
 # Define array of decay values as variables
-QK_DECAYS = (-20.0 -10.0 -5.0 0.0 5.0)
-\WEIGHT_DECAY = 0.1
+QK_DECAYS=(-20.0 -10.0 -5.0 0.0 5.0)
+WEIGHT_DECAY=0.1
 
 ARG_FOR_ALL="--init_from=scratch --max_iters=25000 --wandb_project=from-scratch --weight_decay=$WEIGHT_DECAY --split=True --wandb_run_name=sweep"
 
