@@ -5,6 +5,7 @@ import torch.nn as nn
 from model import GPTConfig, GPT, CausalSelfAttention
 from split_model import SplitAttention, SplitGPTWrapper
 from copy import deepcopy
+import tiktoken
 
 def test_split_gpt_wrapper_training():
     # Configuration
@@ -59,19 +60,19 @@ def test_optimizer_param_groups():
     assert len(optimizer_gpt.param_groups) == 2, "GPT does not have 2 param groups"
     assert len(optimizer_split_gpt.param_groups) == 3, "SplitGPTWrapper does not have 3 param groups"
 
-def test_SplitGPTWrapper_forward_equivalence():
-    # Configuration and model setup
-    config = GPTConfig(n_embd=768, n_head=12, n_layer=12, bias=True)
-
+def test_forward_equivalence():
+    
     # Create two GPT models: one with CausalSelfAttention and one with SplitAttention
-    causal_gpt_model = GPT(config)
+    causal_gpt_model = GPT.from_pretrained('gpt2', dict(dropout=0.0))
 
     # Create GPT model with SplitAttention
     split_gpt_model = SplitGPTWrapper(deepcopy(causal_gpt_model))
 
     # Create a sample input tensor
     batch_size, seq_length = 3, 10
-    x = torch.randint(0, config.vocab_size, (batch_size, seq_length))
+    # gpt2 vocab size is 50257
+    vocab_size = 50257
+    x = torch.randint(0, vocab_size, (batch_size, seq_length))
 
     # Forward pass through both models
     causal_output, _ = causal_gpt_model(x)
@@ -84,18 +85,17 @@ def test_SplitGPTWrapper_forward_equivalence():
     assert causal_gpt_model is not split_gpt_model.gpt, "causal_gpt_model is the same object as split_gpt_model"
 
 
-def test_SplitGPTWrapper_backward_equivalence():
-    # Configuration and model setup
-    config = GPTConfig(n_embd=768, n_head=12, n_layer=12, bias=True)
-
+def test_backward_equivalence():
+    
     # Create two GPT models: one with CausalSelfAttention and one with SplitAttention
-    causal_gpt_model = GPT(config)
+    causal_gpt_model = GPT.from_pretrained('gpt2', dict(dropout=0.0))
     split_gpt_model = SplitGPTWrapper(deepcopy(causal_gpt_model))
 
     # Create a sample input tensor and targets
     batch_size, seq_length = 3, 10
-    x = torch.randint(0, config.vocab_size, (batch_size, seq_length))
-    targets = torch.randint(0, config.vocab_size, (batch_size, seq_length))
+    vocab_size = 50257
+    x = torch.randint(0, vocab_size, (batch_size, seq_length))
+    targets = torch.randint(0, vocab_size, (batch_size, seq_length))
 
     # Get the word token embedding param. If the gradient is the same 
     # we can assume that the gradent is the same for all params in deeper layers as well
@@ -127,7 +127,7 @@ def test_SplitGPTWrapper_backward_equivalence():
     # Assert that they have not accidentally become the same object 
     assert param_causal is not param_split, "param_causal is the same object as param_split"
 
-def test_SplitGPTWrapper_optimizer_equivalence():
+def test_optimizer_equivalence():
     
      # Configuration and model setup
     config = GPTConfig(n_embd=768, n_head=12, n_layer=12, bias=True, dropout=0.0)
@@ -180,7 +180,7 @@ def test_SplitGPTWrapper_optimizer_equivalence():
     # Assert that they have not accidentally become the same object 
     assert causal_gpt_model is not split_gpt_model.gpt, "causal_gpt_model is the same object as split_gpt_model"
 
-def test_SplitGPTWrapper_attention_layer_count():
+def test_attention_layer_count():
     # Configuration and model setup
     config = GPTConfig(n_embd=768, n_head=12, n_layer=12, bias=True)
 
@@ -217,12 +217,50 @@ def test_get_beta():
     # Assert that the beta is positive
     assert beta > 0, "Beta is not positive"
 
+
+def test_sampling_equivalence():
+    # Print initialization messages
+    print("Initializing gpt2")
+    gpt_model = GPT.from_pretrained('gpt2', dict(dropout=0.0))
+
+    print("Wrapping gpt2")
+    wrapped_gpt_model = SplitGPTWrapper(deepcopy(gpt_model))
+
+    # Print encoder initialization message
+    print("Initializing encoder")
+    enc = tiktoken.get_encoding("gpt2")
+
+    # Input preparation
+    start = "We're just getting ready to swing, knock me out with a baseball bat."
+    start_ids = enc.encode(start, allowed_special={""})
+    x = torch.tensor(start_ids, dtype=torch.long)[None, ...]
+
+    # Sampling
+    gpt_model.eval()
+    wrapped_gpt_model.eval()
+    print("Sampling")
+    with torch.no_grad():
+        y_gpt = gpt_model.generate(x, max_new_tokens=50, temperature=0.01, top_k=1)
+        y_wrapped = wrapped_gpt_model.generate(x, max_new_tokens=50, temperature=0.01, top_k=1)
+
+        # Decode and print the outputs
+        decoded_y_gpt = enc.decode(y_gpt[0].tolist())
+        decoded_y_wrapped = enc.decode(y_wrapped[0].tolist())
+        print("Original GPT output:", decoded_y_gpt)
+        print("Wrapped GPT output:", decoded_y_wrapped)
+        
+        # Compare outputs, assert that they are close
+        assert torch.allclose(y_gpt, y_wrapped, atol=1e-6), "Mismatch between GPT and Wrapped GPT models."
+
+    print("Sample matched between GPT and Split Wrapped GPT models.")
+
 if __name__ == "__main__":
+    test_sampling_equivalence()
     test_get_beta()
-    test_SplitGPTWrapper_forward_equivalence()
-    test_SplitGPTWrapper_backward_equivalence()
-    test_SplitGPTWrapper_optimizer_equivalence()
-    test_SplitGPTWrapper_attention_layer_count()
+    test_forward_equivalence()
+    test_backward_equivalence()
+    test_optimizer_equivalence()
+    test_attention_layer_count()
     test_optimizer_param_groups()
     test_split_gpt_wrapper_training()
     print("All tests passed")
