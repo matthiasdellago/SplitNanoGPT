@@ -9,33 +9,11 @@
 #SBATCH --output=/home/mdellag/SplitNanoGPT/logs/%x-%A-%a.out  # Standard output log file; %x is job name, %A is job ID, %a is array index
 #SBATCH --error=/home/mdellag/SplitNanoGPT/logs/%x-%A-%a.err   # Standard error log file; %x is job name, %A is job ID, %a is array index
 
-# Define decay values as variables
-WEIGHT_DECAY=0.1
-QK_WEIGHT_DECAY=0.0
-QK_WEIGHT_DECAY_VANILLA=0.1
-QK_WEIGHT_DECAY_HIGH=5.0       # don't forget .0 or it will be interpreted as an int
-QK_WEIGHT_DECAY_NEGATIVE=-5.0
+# Define array of decay values as variables
+QK_DECAYS = (-20.0 -10.0 -5.0 0.0 5.0)
+\WEIGHT_DECAY = 0.1
 
-ARG_FOR_ALL="--init_from=scratch --wandb_project=from-scratch --weight_decay=$WEIGHT_DECAY"
-
-
-# Arguments for each training scenario
-args=(
-  # split: Train a nanoGPT model with 0 qk_weight_decay and 0.1 weight_decay
-  "--split=True --wandb_run_name=split --weight_decay=$WEIGHT_DECAY --qk_weight_decay=$QK_WEIGHT_DECAY"
-
-  # control1: Just train a normal nanoGPT model
-  "--split=False --wandb_run_name=vanilla --weight_decay=$WEIGHT_DECAY"
-
-  # control2: Train split model with qk_weight_decay=weight_decay=0.1, should be same as normal nanoGPT model
-  "--split=True --wandb_run_name=vanilla-split --weight_decay=$WEIGHT_DECAY --qk_weight_decay=$QK_WEIGHT_DECAY_VANILLA"
-
-  # control3: Train split model with high qk_weight_decay=0.5 and weight_decay=0.1
-  "--split=True --wandb_run_name=split-high-decay --weight_decay=$WEIGHT_DECAY --qk_weight_decay=$QK_WEIGHT_DECAY_HIGH"
-
-  # control4: Train split model with negative qk_weight_decay=-0.1 and weight_decay=0.1
-  "--split=True --wandb_run_name=split-negative-decay --weight_decay=$WEIGHT_DECAY --qk_weight_decay=$QK_WEIGHT_DECAY_NEGATIVE"
-)
+ARG_FOR_ALL="--init_from=scratch --max_iters=25000 --wandb_project=from-scratch --weight_decay=$WEIGHT_DECAY --split=True --wandb_run_name=sweep"
 
 cd /home/mdellag/SplitNanoGPT/
 
@@ -46,7 +24,7 @@ conda activate nanoGPTenv                                 # Activate the desired
 
 
 # Extract the specific command based on the SLURM array task ID and ARG_FOR_ALL
-command="python3 /home/mdellag/SplitNanoGPT/split_train.py ${args[$SLURM_ARRAY_TASK_ID]} $ARG_FOR_ALL"
+command="python3 /home/mdellag/SplitNanoGPT/split_train.py ${QK_DECAYS[$SLURM_ARRAY_TASK_ID]} $ARG_FOR_ALL"
 
 # Echo the command to stdout for transparency
 echo "Running command: $command"
