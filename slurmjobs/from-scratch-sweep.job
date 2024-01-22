@@ -24,7 +24,7 @@ conda activate nanoGPTenv                                 # Activate the desired
 
 
 # Extract the specific command based on the SLURM array task ID and ARG_FOR_ALL
-command="python3 /home/mdellag/SplitNanoGPT/split_train.py ${QK_DECAYS[$SLURM_ARRAY_TASK_ID]} $ARG_FOR_ALL"
+command="python3 /home/mdellag/SplitNanoGPT/split_train.py --qk_weight_decay=${QK_DECAYS[$SLURM_ARRAY_TASK_ID]} $ARG_FOR_ALL"
 
 # Echo the command to stdout for transparency
 echo "Running command: $command"
