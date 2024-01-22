@@ -73,12 +73,12 @@ n_embd = 128
 dropout = 0.0 # for pretraining 0 is good, for finetuning try 0.1+
 bias = False # do we use bias inside LayerNorm and Linear layers?
 # adamw optimizer
-learning_rate = 3e-5 # max learning rate
+learning_rate = 3e-4 # max learning rate
 max_iters = 5000 # total number of training iterations
 weight_decay = 0.1
 beta1 = 0.9
 beta2 = 0.99
-grad_clip = 1.0 # clip gradients at this value, or disable if == 0.0
+grad_clip = 0.0 # clip gradients at this value, or disable if == 0.0
 # learning rate decay settings
 decay_lr = False # whether to decay the learning rate
 warmup_iters = 20 # how many steps to warm up for
