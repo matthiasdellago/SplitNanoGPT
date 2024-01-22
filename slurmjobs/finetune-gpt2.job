@@ -13,8 +13,8 @@
 WEIGHT_DECAY=0.1
 QK_WEIGHT_DECAY=0.0
 QK_WEIGHT_DECAY_VANILLA=0.1
-QK_WEIGHT_DECAY_HIGH=5
-QK_WEIGHT_DECAY_NEGATIVE=-5
+QK_WEIGHT_DECAY_HIGH=5.0       # don't forget .0 or it will be interpreted as an int
+QK_WEIGHT_DECAY_NEGATIVE=-5.0
 
 # Arguments for each training scenario
 args=(
