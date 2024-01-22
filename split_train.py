@@ -94,7 +94,7 @@ compile = False # use PyTorch 2.0 to compile the model to be faster
 
 # -----------------------------------------------------------------------------
 config_keys = [k for k,v in globals().items() if not k.startswith('_') and isinstance(v, (int, float, bool, str))]
-# exec(open('configurator.py').read()) # overrides from command line or config file
+exec(open('configurator.py').read()) # overrides from command line or config file
 # -----------------------------------------------------------------------------
 
 # ####################################   MODDED   ############################################
