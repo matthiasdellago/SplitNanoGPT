@@ -14,6 +14,9 @@ class SplitAttention(nn.Module):
     """
     def __init__(self, csa : CausalSelfAttention):
         super().__init__()
+        
+        # store average entropy of attention scores of the last forward pass
+        self.entropy = 0.
 
         # Check if csa.c_attn has a bias
         has_bias = csa.c_attn.bias is not None
@@ -67,21 +70,37 @@ class SplitAttention(nn.Module):
         v = v.view(B, T, self.n_head, C // self.n_head).transpose(1, 2) # (B, nh, T, hs)
 
         # causal self-attention; Self-attend: (B, nh, T, hs) x (B, nh, hs, T) -> (B, nh, T, T)
-        if self.flash:
-            # efficient attention using Flash Attention CUDA kernels
-            y = torch.nn.functional.scaled_dot_product_attention(q, k, v, attn_mask=None, dropout_p=self.dropout if self.training else 0, is_causal=True)
-        else:
-            # manual implementation of attention
-            att = (q @ k.transpose(-2, -1)) * (1.0 / math.sqrt(k.size(-1)))
-            att = att.masked_fill(self.bias[:,:,:T,:T] == 0, float('-inf'))
-            att = F.softmax(att, dim=-1)
-            att = self.attn_dropout(att)
-            y = att @ v # (B, nh, T, T) x (B, nh, T, hs) -> (B, nh, T, hs)
+        
+        # Commented out because we want to calculate the entropy of the attention scores
+        # And we don't have Pytorch 2.0 on the cluster anyway
+        # if self.flash:
+        #     # efficient attention using Flash Attention CUDA kernels
+        #     y = torch.nn.functional.scaled_dot_product_attention(q, k, v, attn_mask=None, dropout_p=self.dropout if self.training else 0, is_causal=True)
+        # else:
+
+        # manual implementation of attention
+        att = (q @ k.transpose(-2, -1)) * (1.0 / math.sqrt(k.size(-1)))
+        att = att.masked_fill(self.bias[:,:,:T,:T] == 0, float('-inf'))
+        att = F.softmax(att, dim=-1)
+        
+        self.entropy = self.calculate_entropy(att)
+
+        att = self.attn_dropout(att)
+        y = att @ v # (B, nh, T, T) x (B, nh, T, hs) -> (B, nh, T, hs)
+    
         y = y.transpose(1, 2).contiguous().view(B, T, C) # re-assemble all head outputs side by side
 
         # output projection
         y = self.resid_dropout(self.c_proj(y))
         return y
+
+    @staticmethod
+    def calculate_entropy(att):
+        """
+        Calculate the entropy of the attention scores.
+        """
+        att_entropy = -torch.sum(att * torch.log(att + 1e-8), dim=-1)
+        return att_entropy.mean().item()
 
     def get_average_magnitude(self):
         """
@@ -167,4 +186,11 @@ class SplitGPTWrapper():
             split_attentions.append(block.attn)
     
         # Calculate and return the average magnitude of all SplitAttention layers
-        return sum([split_attention.get_average_magnitude() for split_attention in split_attentions]) / len(split_attentions)
+        return [split_attention.get_average_magnitude() for split_attention in split_attentions]
+
+    def get_entropies(self):
+        """
+        Calculate and return the entropy of the attention scores.
+        """
+        entropies = [block.attn.entropy for block in self.gpt.transformer.h]
+        return entropies

@@ -74,9 +74,27 @@ def test_get_magnitudes():
     # Assert that the calculated magnitude matches the manually computed magnitude (within a tolerance)
     assert torch.allclose(calculated_magnitude, expected_magnitude, atol=1e-6), "Calculated magnitude does not match the expected magnitude"
 
+def test_entropy_of_uniform_distribution():
+    n = 10
+    att_uniform = torch.full((1, n, n), fill_value=1.0/n)  # Uniform distribution
+    entropy = SplitAttention.calculate_entropy(att_uniform)
+    # Theoretical entropy for a uniform distribution is log(n)
+    theoretical_entropy = torch.log(torch.tensor(n)).item()
+    assert abs(entropy - theoretical_entropy) < 1e-5, f"Expected entropy close to log({n}) = {theoretical_entropy}, got {entropy}"
+
+def test_entropy_of_delta_distribution():
+    n = 10
+    att_delta = torch.zeros((1, n, n))
+    att_delta[:, :, 0] = 1  # All attention on the first element
+    entropy = SplitAttention.calculate_entropy(att_delta)
+    # Theoretical entropy for a delta distribution is 0
+    assert abs(entropy) < 1e-5, f"Expected entropy of delta distribution to be 0, got {entropy}"
+
 
 if __name__ == "__main__":
     test_split_attention_forward_equivalence()
     test_split_attention_backward_equivalence()
     test_get_magnitudes()
+    test_entropy_of_uniform_distribution()
+    test_entropy_of_delta_distribution()
     print("All tests passed")
