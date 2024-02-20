@@ -90,6 +90,14 @@ def test_entropy_of_delta_distribution():
     # Theoretical entropy for a delta distribution is 0
     assert abs(entropy) < 1e-5, f"Expected entropy of delta distribution to be 0, got {entropy}"
 
+def test_entropy_of_random_distribution():
+    n = 10
+    att_random = torch.rand((1, n, n))
+    # normalize to sum to 1
+    att_random /= att_random.sum(dim=-1, keepdim=True)
+    entropy = SplitAttention.calculate_entropy(att_random)
+    # Entropy is between 0 and log(n)
+    assert 0 <= entropy <= torch.log(torch.tensor(n)).item(), f"Expected entropy to be between 0 and log({n}), got {entropy}"
 
 if __name__ == "__main__":
     test_split_attention_forward_equivalence()
