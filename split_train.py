@@ -332,8 +332,9 @@ while True:
                 # log betas, seperately for each layer
                 for key, value in betas_dict.items():
                     log_data[key + "_beta"] = value
+
+                entropy_dict = model.get_entropies()
                 # log entropy, seperately for each layer
-                entropy_dict = model.get_entropy()
                 for key, value in entropy_dict.items():
                     log_data[key + "_entropy"] = value
 
