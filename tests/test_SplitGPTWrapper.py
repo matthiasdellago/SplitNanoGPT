@@ -208,7 +208,7 @@ def test_get_beta():
     split_gpt_model = SplitGPTWrapper(GPT(config))
 
     # Get the beta (inverse temperature) for all heads
-    betas = split_gpt_model.get_average_beta()
+    betas = split_gpt_model.get_betas()
 
     # Assert that the beta is a list
     assert isinstance(betas, list), "Beta is not a list"

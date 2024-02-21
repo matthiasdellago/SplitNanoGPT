@@ -179,7 +179,7 @@ class SplitGPTWrapper():
 
         return optimizer
     
-    def get_average_beta(self) -> List[float]:
+    def get_betas(self) -> List[float]:
         """
         Calculate and return the magnitudes of all heads.
         This is equivalent to the beta (inverse temperature) in a hopfield layer.

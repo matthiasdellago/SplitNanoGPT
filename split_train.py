@@ -328,7 +328,8 @@ while True:
             }
             # Add beta only if split is True
             if split:
-                log_data["beta"] = model.get_average_beta().item()  # convert to float from tensor
+                log_data["beta"] = model.get_betas()
+                log_data["entropy"] = model.get_entropies()
             #log to wandb
             wandb.log(log_data)
             # ##################################   END MODDED   ############################################
