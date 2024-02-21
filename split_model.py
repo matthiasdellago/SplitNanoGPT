@@ -12,7 +12,7 @@ class SplitAttention(nn.Module):
     SplitAttention is a wrapper around CausalSelfAttention that splits the key, query, and value projections.
     This allows us to apply separate weight decay to the key and query projections.
     """
-    def __init__(self, csa : CausalSelfAttention):
+    def __init__(self, csa : CausalSelfAttention, config : GPTConfig):
         super().__init__()
         
         # store average entropy of attention scores of the last forward pass
@@ -48,11 +48,17 @@ class SplitAttention(nn.Module):
         self.n_embd = csa.n_embd
         self.dropout = csa.dropout
         # flash attention make GPU go brrrrr but support is only in PyTorch >= 2.0
-        self.flash = hasattr(torch.nn.functional, 'scaled_dot_product_attention')
+        # self.flash = hasattr(torch.nn.functional, 'scaled_dot_product_attention')
+        
+        # MODDED: In order to read out the entropy of the attention scores, we need to use the manual implementation
+        # Additionally, we don't have PyTorch 2.0 on the cluster, so we can't use the flash attention anyway
+        self.flash = False
+        
         if not self.flash:
             print("WARNING: using slow attention. Flash Attention requires PyTorch >= 2.0")
             # get block size from CausalSelfAttention
-            block_size = csa.bias.size(-1)
+            # BUG: if csa uses flash attention, this will fail because csa.bias is not defined
+            block_size = config.block_size
             # causal mask to ensure that attention is only applied to the left in the input sequence  
             self.register_buffer("bias", torch.tril(torch.ones(block_size, block_size))
                                         .view(1, 1, block_size, block_size))
@@ -71,7 +77,7 @@ class SplitAttention(nn.Module):
 
         # causal self-attention; Self-attend: (B, nh, T, hs) x (B, nh, hs, T) -> (B, nh, T, T)
         
-        # Commented out because we want to calculate the entropy of the attention scores
+        # MODDEDCommented out because we want to calculate the entropy of the attention scores
         # And we don't have Pytorch 2.0 on the cluster anyway
         # if self.flash:
         #     # efficient attention using Flash Attention CUDA kernels
@@ -83,6 +89,7 @@ class SplitAttention(nn.Module):
         att = att.masked_fill(self.bias[:,:,:T,:T] == 0, float('-inf'))
         att = F.softmax(att, dim=-1)
         
+        # MODDED: Calculate and store the entropy of the attention scores
         self.entropy = self.calculate_entropy(att)
 
         att = self.attn_dropout(att)
@@ -128,10 +135,11 @@ class SplitGPTWrapper():
     """
     def __init__(self, gpt_instance : GPT):
         self.gpt = gpt_instance
-
+        
+        # BUG: fix by adding batch_size via config to SplitAttention
         # Replace all CausalSelfAttention layers with SplitAttention
         for block in self.gpt.transformer.h:
-            block.attn = SplitAttention(block.attn)
+            block.attn = SplitAttention(block.attn, gpt_instance.config)
 
     def __getattr__(self, name):
         # Delegate calls to non-overridden methods to the GPT instance

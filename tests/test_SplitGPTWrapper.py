@@ -91,7 +91,6 @@ def test_backward_equivalence():
     causal_gpt_model = GPT.from_pretrained('gpt2', dict(dropout=0.0))
     split_gpt_model = SplitGPTWrapper(deepcopy(causal_gpt_model))
 
-    # Create a sample input tensor and targets
     batch_size, seq_length = 3, 10
     vocab_size = 50257
     x = torch.randint(0, vocab_size, (batch_size, seq_length))
@@ -203,19 +202,25 @@ def test_attention_layer_count():
 
 def test_get_beta():
     # Configuration and model setup
-    config = GPTConfig(n_embd=768, n_head=12, n_layer=12, bias=True)
+    config = GPTConfig(n_embd=768, n_head=6, n_layer=12, bias=True)
 
     # Create GPT model with SplitAttention
     split_gpt_model = SplitGPTWrapper(GPT(config))
 
     # Get the beta (inverse temperature) for all heads
-    beta = split_gpt_model.get_average_beta()
+    betas = split_gpt_model.get_average_beta()
 
-    # Assert that the beta is a one dimensional tensor
-    assert beta.dim() == 0, "Beta is not a 0 dimensional tensor"
+    # Assert that the beta is a list
+    assert isinstance(betas, list), "Beta is not a list"
 
-    # Assert that the beta is positive
-    assert beta > 0, "Beta is not positive"
+    # Assert that all betas are positive
+    assert all(b > 0 for b in betas), "Beta is not positive"
+
+    # Assert that the length of beta list is equal to the number of layers
+    assert len(betas) == config.n_layer, "Incorrect number of beta values"
+
+    # Assert that all betas are positive
+    assert all(b > 0 for b in betas), "Beta is not positive"
 
 
 def test_sampling_equivalence():
@@ -253,6 +258,36 @@ def test_sampling_equivalence():
         assert torch.allclose(y_gpt, y_wrapped, atol=1e-6), "Mismatch between GPT and Wrapped GPT models."
 
     print("Sample matched between GPT and Split Wrapped GPT models.")
+
+def test_entropy_change_with_weight_modification():
+    # Initialize a Split GPT2 model from pretrained
+    model = GPT.from_pretrained('gpt2', dict(dropout=0.0))
+    split_model = SplitGPTWrapper(model)
+
+    # Input preparation
+    enc = tiktoken.get_encoding("gpt2")
+    start = "Entropy is just the information carrying capacity of a system."
+    start_ids = enc.encode(start, allowed_special={""})
+    x = torch.tensor(start_ids, dtype=torch.long)[None, ...]
+    
+    # Perform a forward pass and calculate initial entropy
+    split_model.eval()  # Ensure model is in evaluation mode
+    with torch.no_grad():
+        split_model(x)
+    initial_entropy = split_model.get_entropies()
+
+    # Modify W_K and W_Q weights by multiplying by 100
+    for block in split_model.gpt.transformer.h:
+        block.attn.w_k.weight.data *= 100
+        block.attn.w_q.weight.data *= 100
+
+    # Perform another forward pass and calculate new entropy
+    with torch.no_grad():
+        split_model(x)
+    modified_entropy = split_model.get_entropies()
+
+    # Assert that the entropy is smaller after the weight modification
+    assert modified_entropy < initial_entropy, f"Expected entropy to decrease after weight modification, but {modified_entropy} > {initial_entropy}"
 
 if __name__ == "__main__":
     test_sampling_equivalence()

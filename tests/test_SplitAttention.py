@@ -9,7 +9,7 @@ def test_split_attention_forward_equivalence():
     # Configuration and model setup
     config = GPTConfig(n_embd=768, n_head=12, n_layer=12, bias=True)
     causal_attention = CausalSelfAttention(config)
-    split_attention = SplitAttention(causal_attention)
+    split_attention = SplitAttention(causal_attention, config)
 
     # Create a sample input tensor
     batch_size, seq_length, embd_size = 3, 10, 768  # Adjust as needed
@@ -29,7 +29,7 @@ def test_split_attention_backward_equivalence():
     # Configuration and model setup
     config = GPTConfig(n_embd=768, n_head=12, n_layer=12, bias=True)
     causal_attention = CausalSelfAttention(config)
-    split_attention = SplitAttention(causal_attention)
+    split_attention = SplitAttention(causal_attention, config)
 
     # Create a sample input tensor and target
     batch_size, seq_length, embd_size = 3, 10, 768
@@ -60,7 +60,7 @@ def test_get_magnitudes():
     # Configuration and model setup
     config = GPTConfig(n_embd=768, n_head=12, n_layer=12, bias=True)
     causal_attention = CausalSelfAttention(config)
-    split_attention = SplitAttention(causal_attention)
+    split_attention = SplitAttention(causal_attention, config)
 
     # Calculate average magnitude using the method
     calculated_magnitude = split_attention.get_average_magnitude()
