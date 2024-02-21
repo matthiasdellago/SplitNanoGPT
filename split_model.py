@@ -6,6 +6,7 @@ from copy import deepcopy
 import inspect
 import math
 import torch.nn.functional as F
+from typing import List
 
 class SplitAttention(nn.Module):
     """
@@ -115,7 +116,7 @@ class SplitAttention(nn.Module):
         This is equivalent to the beta (inverse temperature) in a hopfield layer.
         The magnitude of attention is the norm of W_k^T W_q, per head.
         Splitting it into seperate heads is too much of a hassle, for now, so we just take it over all heads.
-        TODO: Split it into seperate heads, look how TransformerLens does it.
+        TODO: Split it into seperate heads, look how TransformerLens does it, or how I did in the previous experiment.
         """
 
         # Find the product of W_Q and W_K^T
@@ -178,13 +179,12 @@ class SplitGPTWrapper():
 
         return optimizer
     
-    def get_average_beta(self):
+    def get_average_beta(self) -> List[float]:
         """
         Calculate and return the magnitudes of all heads.
         This is equivalent to the beta (inverse temperature) in a hopfield layer.
         The magnitude of attention is the norm of W_k^T W_q, per head.
         Splitting it into seperate heads is too much of a hassle, for now, so we just take it over all heads.
-        TODO: Split it into seperate heads, look how TransformerLens does it.
         TODO: Parallelize this over all heads.
         """
             
@@ -194,9 +194,9 @@ class SplitGPTWrapper():
             split_attentions.append(block.attn)
     
         # Calculate and return the average magnitude of all SplitAttention layers
-        return [split_attention.get_average_magnitude() for split_attention in split_attentions]
+        return [split_attention.get_average_magnitude().item() for split_attention in split_attentions]
 
-    def get_entropies(self):
+    def get_entropies(self) -> List[float]:
         """
         Calculate and return the entropy of the attention scores.
         """

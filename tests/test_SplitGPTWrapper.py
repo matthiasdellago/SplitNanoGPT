@@ -213,6 +213,9 @@ def test_get_beta():
     # Assert that the beta is a list
     assert isinstance(betas, list), "Beta is not a list"
 
+    # Assert that the betas are floats
+    assert all(isinstance(b, float) for b in betas), "Beta is not a float"
+
     # Assert that all betas are positive
     assert all(b > 0 for b in betas), "Beta is not positive"
 
