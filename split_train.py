@@ -326,10 +326,17 @@ while True:
                 "lr": lr,
                 "mfu": running_mfu*100, # convert to percentage
             }
-            # Add beta only if split is True
+            # Add beta and entropy only if split is True
             if split:
-                log_data["beta"] = model.get_betas()
-                log_data["entropy"] = model.get_entropies()
+                betas_dict =  model.get_betas()
+                # log betas, seperately for each layer
+                for key, value in betas_dict.items():
+                    log_data[key + "_beta"] = value
+                # log entropy, seperately for each layer
+                entropy_dict = model.get_entropy()
+                for key, value in entropy_dict.items():
+                    log_data[key + "_entropy"] = value
+
             #log to wandb
             wandb.log(log_data)
             # ##################################   END MODDED   ############################################

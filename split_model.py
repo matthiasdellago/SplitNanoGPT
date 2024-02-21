@@ -6,7 +6,7 @@ from copy import deepcopy
 import inspect
 import math
 import torch.nn.functional as F
-from typing import List
+from typing import Dict
 
 class SplitAttention(nn.Module):
     """
@@ -179,26 +179,29 @@ class SplitGPTWrapper():
 
         return optimizer
     
-    def get_betas(self) -> List[float]:
+    def get_betas(self) -> Dict[str, float]:
         """
         Calculate and return the magnitudes of all heads.
         This is equivalent to the beta (inverse temperature) in a hopfield layer.
         The magnitude of attention is the norm of W_k^T W_q, per head.
         Splitting it into seperate heads is too much of a hassle, for now, so we just take it over all heads.
         TODO: Parallelize this over all heads.
-        """
-            
-        # Get all SplitAttention layers
-        split_attentions = []
-        for block in self.gpt.transformer.h:
-            split_attentions.append(block.attn)
-    
-        # Calculate and return the average magnitude of all SplitAttention layers
-        return [split_attention.get_average_magnitude().item() for split_attention in split_attentions]
+        """     
+        betas = {}
+        for i, block in enumerate(self.gpt.transformer.h):
+            # Use the layer index as the key, indicating this value corresponds to a layer, not a head
+            key = f"layer_{i}"
+            betas[key] = block.attn.get_average_magnitude().item()
+        return betas
 
-    def get_entropies(self) -> List[float]:
+    def get_entropies(self) -> Dict[str, float]:
         """
-        Calculate and return the entropy of the attention scores.
+        Calculate and return the entropy of the attention scores as a dictionary.
+        Each key-value pair in the dictionary corresponds to a layer and its entropy.
         """
-        entropies = [block.attn.entropy for block in self.gpt.transformer.h]
+        entropies = {}
+        for i, block in enumerate(self.gpt.transformer.h):
+            # Use the layer index as the key, reflecting that it corresponds to a layer
+            key = f"layer_{i}"
+            entropies[key] = block.attn.entropy
         return entropies

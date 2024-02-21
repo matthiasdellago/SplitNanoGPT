@@ -210,20 +210,17 @@ def test_get_beta():
     # Get the beta (inverse temperature) for all heads
     betas = split_gpt_model.get_betas()
 
-    # Assert that the beta is a list
-    assert isinstance(betas, list), "Beta is not a list"
+    # Assert that the betas is a dict
+    assert isinstance(betas, dict), f"Betas is a {type(betas)}, not a dict"
 
     # Assert that the betas are floats
-    assert all(isinstance(b, float) for b in betas), "Beta is not a float"
+    assert all(isinstance(b, float) for b in betas.values()), "Beta is not a float"
 
     # Assert that all betas are positive
-    assert all(b > 0 for b in betas), "Beta is not positive"
+    assert all(b > 0 for b in betas.values()), "Beta is not positive"
 
     # Assert that the length of beta list is equal to the number of layers
     assert len(betas) == config.n_layer, "Incorrect number of beta values"
-
-    # Assert that all betas are positive
-    assert all(b > 0 for b in betas), "Beta is not positive"
 
 
 def test_sampling_equivalence():
@@ -289,8 +286,12 @@ def test_entropy_change_with_weight_modification():
         split_model(x)
     modified_entropy = split_model.get_entropies()
 
-    # Assert that the entropy is smaller after the weight modification
-    assert modified_entropy < initial_entropy, f"Expected entropy to decrease after weight modification, but {modified_entropy} > {initial_entropy}"
+    # Assert that both dicts have the same keys
+    assert initial_entropy.keys() == modified_entropy.keys(), "Initial and modified entropy dicts have different keys"
+
+    # Assert that the entropy of each key is smaller after the weight modification
+    for key in initial_entropy.keys():
+        assert modified_entropy[key] < initial_entropy[key], f"Expected entropy to decrease after weight modification, but {modified_entropy[key]} > {initial_entropy[key]}, in {key}"
 
 if __name__ == "__main__":
     test_sampling_equivalence()
