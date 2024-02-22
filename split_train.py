@@ -332,11 +332,15 @@ while True:
                 # log betas, seperately for each layer
                 for key, value in betas_dict.items():
                     log_data[key + "_beta"] = value
+                # log mean beta
+                log_data["average_beta"] = mean(list(betas_dict.values()))
 
                 entropy_dict = model.get_entropies()
                 # log entropy, seperately for each layer
                 for key, value in entropy_dict.items():
                     log_data[key + "_entropy"] = value
+                # log mean entropy
+                log_data["average_entropy"] = mean(list(entropy_dict.values()))
 
             #log to wandb
             wandb.log(log_data)
