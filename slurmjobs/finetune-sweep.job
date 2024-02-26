@@ -10,7 +10,7 @@
 #SBATCH --error=/home/mdellag/SplitNanoGPT/logs/%x-%A-%a.err   # Standard error log file; %x is job name, %A is job ID, %a is array index
 
 # Define array of decay values as variables
-QK_DECAYS=(-20.0 -10.0 -5.0 0.0 5.0)
+QK_DECAYS=(-3.2 -1.6 -0.8 -0.4 -0.2)
 WEIGHT_DECAY=0.1
 
 ARG_FOR_ALL="--max_iters=25000 --wandb_project=openwebtext-finetune --weight_decay=$WEIGHT_DECAY --split=True --wandb_run_name=with_entropy"
