@@ -37,6 +37,7 @@ from model import GPTConfig, GPT
 
 # ####################################   MODDED   ############################################
 from split_model import SplitGPTWrapper
+from statistics import mean
 
 # if True, apply splitGPTwrapper!
 split = True
