@@ -179,23 +179,23 @@ class SplitGPTWrapper():
 
         return optimizer
 
-def temperature_penalty(self, penalty_strength: float) -> torch.Tensor:
-    """
-    Applies an exponential penalty to the absolute values of weights in w_q and w_k.
+    def temperature_penalty(self, penalty_strength: float) -> torch.Tensor:
+        """
+        Applies an exponential penalty to the absolute values of weights in w_q and w_k.
 
-    Args:
-    - penalty_strength (float): Controls the intensity of the penalty.
+        Args:
+        - penalty_strength (float): Controls the intensity of the penalty.
 
-    Returns:
-    - A scalar tensor representing the total penalty.
-    """
-    # Filter the parameters to only include w_q and w_k weights
-    qk_params = (param for name, param in self.named_parameters() if 'w_k.weight' in name or 'w_q.weight' in name)
-    
-    # Compute the penalty using a generator expression for efficiency
-    penalty_loss = sum(torch.sum(torch.exp(-torch.abs(p))) for p in qk_params)
-    
-    return penalty_strength * penalty_loss
+        Returns:
+        - A scalar tensor representing the total penalty.
+        """
+        # Filter the parameters to only include w_q and w_k weights
+        qk_params = (param for name, param in self.named_parameters() if 'w_k.weight' in name or 'w_q.weight' in name)
+        
+        # Compute the penalty using a generator expression for efficiency
+        penalty_loss = sum(torch.sum(torch.exp(-torch.abs(p))) for p in qk_params)
+        
+        return penalty_strength * penalty_loss
     
     def get_betas(self) -> Dict[str, float]:
         """
