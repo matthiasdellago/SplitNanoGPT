@@ -42,7 +42,10 @@ from statistics import mean
 # if True, apply splitGPTwrapper!
 split = True
 # weight decay applied to QK matrix
-qk_weight_decay = 0.1
+qk_weight_decay = 0.0
+# termperature penalty, applied to the loss
+# punishes high magnitudes of QK matrix
+temperature_penalty = 1.0
 
 # ##################################   END MODDED   ############################################
 
@@ -376,6 +379,13 @@ while True:
         with ctx:
             logits, loss = model(X, Y)
             loss = loss / gradient_accumulation_steps # scale the loss to account for gradient accumulation
+
+            # ####################################   MODDED   ############################################
+            if temperature_penalty != 0.0:
+                assert qk_weight_decay == 0.0, "temperature_penalty and qk_weight_decay should not be used together, they are different ways of penalizing high magnitudes of QK matrix"
+                loss += model.temperature_penalty()
+            # ##################################   END MODDED   ############################################
+
         # immediately async prefetch next batch while model is doing the forward pass on the GPU
         X, Y = get_batch('train')
         # backward pass, with gradient scaling if training in fp16
