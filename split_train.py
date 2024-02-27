@@ -231,7 +231,6 @@ if block_size < model.config.block_size:
     model_args['block_size'] = block_size # so that the checkpoint will have the right value
 
 # ####################################   MODDED   ############################################
-penalty_decay
 if split:
     model = SplitGPTWrapper(model)
 
