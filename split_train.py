@@ -352,7 +352,7 @@ while True:
             if temp_penalty_str != 0.0:
                 # get the temperature penalty loss without grad
                 with torch.no_grad():
-                    temp_penalty = model.temperature_penalty(temp_penalty_decay)
+                    log_data["temp_penalty_loss"] = temp_penalty_str*model.temperature_penalty(temp_penalty_decay).item()
 
             #log to wandb
             wandb.log(log_data)
