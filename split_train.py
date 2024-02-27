@@ -383,7 +383,7 @@ while True:
             # ####################################   MODDED   ############################################
             if temperature_penalty != 0.0:
                 assert qk_weight_decay == 0.0, "temperature_penalty and qk_weight_decay should not be used together, they are different ways of penalizing high magnitudes of QK matrix"
-                loss += model.temperature_penalty()
+                loss += model.temperature_penalty(temperature_penalty)
             # ##################################   END MODDED   ############################################
 
         # immediately async prefetch next batch while model is doing the forward pass on the GPU
