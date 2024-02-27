@@ -213,8 +213,8 @@ def test_get_beta():
     # Assert that the betas is a dict
     assert isinstance(betas, dict), f"Betas is a {type(betas)}, not a dict"
 
-    # Assert that the betas are floats
-    assert all(isinstance(b, float) for b in betas.values()), "Beta is not a float"
+    # Assert that the betas are tensors
+    assert all(isinstance(b, torch.Tensor) for b in betas.values()), "Beta is not a tensor"
 
     # Assert that all betas are positive
     assert all(b > 0 for b in betas.values()), "Beta is not positive"
@@ -292,6 +292,33 @@ def test_entropy_change_with_weight_modification():
     # Assert that the entropy of each key is smaller after the weight modification
     for key in initial_entropy.keys():
         assert modified_entropy[key] < initial_entropy[key], f"Expected entropy to decrease after weight modification, but {modified_entropy[key]} > {initial_entropy[key]}, in {key}"
+
+def test_temperature_penalty():
+    # Initialize a SplitGPTWrapper model
+    model = GPT.from_pretrained('gpt2', dict(dropout=0.0))
+    split_gpt_model = SplitGPTWrapper(model)
+
+    # Define a penalty decay value
+    penalty_decay = 1
+
+    # Manually compute an expected penalty for verification
+    # For a more robust test, you might compute this based on known weights or specific conditions
+    expected_penalty = torch.tensor(0.0)
+    betas = split_gpt_model.get_betas()
+    for beta in betas.values():
+        expected_penalty += torch.exp(-penalty_decay * beta)
+
+    # Compute temperature penalty using the method
+    penalty_loss = split_gpt_model.temperature_penalty(penalty_decay)
+
+    # Verify the penalty_loss is a scalar tensor
+    assert penalty_loss.dim() == 0, "Penalty loss should be a scalar tensor"
+
+    # Verify the computed penalty_loss matches the expected value within a tolerance
+    # Note: Depending on how `get_betas` is implemented, you may need to adjust the tolerance
+    assert torch.isclose(penalty_loss, expected_penalty, atol=1e-6), f"Penalty loss {penalty_loss} does not match expected value {expected_penalty}"
+
+
 
 if __name__ == "__main__":
     test_sampling_equivalence()

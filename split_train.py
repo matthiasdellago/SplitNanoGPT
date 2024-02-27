@@ -49,7 +49,7 @@ qk_weight_decay = 0.0
 # Strength of the penalty
 temp_penalty_str = 1.0
 # Decay of the temperature penalty, 
-temp_penalty_decay = 1.0
+temp_penalty_decay = 1/653 # 653 is the average beta of the GPT-2 model
 # ##################################   END MODDED   ############################################
 
 
@@ -231,7 +231,7 @@ if block_size < model.config.block_size:
     model_args['block_size'] = block_size # so that the checkpoint will have the right value
 
 # ####################################   MODDED   ############################################
-
+penalty_decay
 if split:
     model = SplitGPTWrapper(model)
 
@@ -333,6 +333,8 @@ while True:
             # Add beta and entropy only if split is True
             if split:
                 betas_dict =  model.get_betas()
+                # turn betas into a list of floats
+                betas_dict = {key: value.item() for key, value in betas_dict.items()}
                 # log betas, seperately for each layer
                 for key, value in betas_dict.items():
                     log_data[key + "_beta"] = value

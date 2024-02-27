@@ -178,26 +178,8 @@ class SplitGPTWrapper():
         print(f"Using fused AdamW: {use_fused}")
 
         return optimizer
-
-    def temperature_penalty(self, penalty_decay: float) -> torch.Tensor:
-        """
-        Applies an exponential penalty to the absolute values of weights in w_q and w_k.
-
-        Args:
-        - penalty_strength (float): Controls the intensity of the penalty.
-
-        Returns:
-        - A scalar tensor representing the total penalty.
-        """
-        # Filter the parameters to only include w_q and w_k weights
-        qk_params = (param for name, param in self.named_parameters() if 'w_k.weight' in name or 'w_q.weight' in name)
-        
-        # Compute the penalty using a generator expression for efficiency
-        penalty_loss = sum(torch.exp(-penalty_decay*torch.norm(p)) for p in qk_params)
-        
-        return penalty_loss
     
-    def get_betas(self) -> Dict[str, float]:
+    def get_betas(self) -> Dict[str, torch.Tensor]:
         """
         Calculate and return the magnitudes of all heads.
         This is equivalent to the beta (inverse temperature) in a hopfield layer.
@@ -209,8 +191,26 @@ class SplitGPTWrapper():
         for i, block in enumerate(self.gpt.transformer.h):
             # Use the layer index as the key, indicating this value corresponds to a layer, not a head
             key = f"layer_{i}"
-            betas[key] = block.attn.get_average_magnitude().item()
+            betas[key] = block.attn.get_average_magnitude()
         return betas
+
+    def temperature_penalty(self, penalty_decay: float) -> torch.Tensor:
+        """
+        Applies an exponential penalty to the absolute values of weights in w_q and w_k.
+
+        Args:
+        - penalty_strength (float): Controls the intensity of the penalty.
+
+        Returns:
+        - A scalar tensor representing the total penalty.
+        """
+        betas = self.get_betas()
+        
+        # Compute the penalty, summing over all layers
+        penalty_loss = torch.stack([torch.exp(-penalty_decay*beta) for beta in betas.values()]).sum()
+
+                
+        return penalty_loss
 
     def get_entropies(self) -> Dict[str, float]:
         """
