@@ -106,15 +106,12 @@ exec(open('configurator.py').read()) # overrides from command line or config fil
 
 # ####################################   MODDED   ############################################
 
-# prepend weight_decay_ to the run name
-wandb_run_name = 'w-dec=' + str(weight_decay) + '_' + wandb_run_name
-
 # make the name unique by appending the time with minute precision
 wandb_run_name += '_' + time.strftime("%m-%d_%H-%M")
 
 # prepend split_ and qk_weight_decay_ to the run name if split is True
 if split:
-    wandb_run_name = 'split:' + 'qk-dec=' + str(qk_weight_decay) + '_' + wandb_run_name
+    wandb_run_name = 'split:' + wandb_run_name
 else:
     wandb_run_name = 'nosplit:' + wandb_run_name
 
