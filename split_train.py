@@ -45,8 +45,11 @@ split = True
 qk_weight_decay = 0.0
 # termperature penalty, applied to the loss
 # punishes high magnitudes of QK matrix
-temperature_penalty = 1.0
-
+# penalty = temp_penalty_str * exp(temp_penalty_decay * norm(QK))
+# Strength of the penalty
+temp_penalty_str = 1.0
+# Decay of the temperature penalty, 
+temp_penalty_decay = 1.0
 # ##################################   END MODDED   ############################################
 
 
@@ -346,6 +349,11 @@ while True:
                 # log mean entropy
                 log_data["average_entropy"] = mean(list(entropy_dict.values()))
 
+            if temp_penalty_str != 0.0:
+                # get the temperature penalty loss without grad
+                with torch.no_grad():
+                    temp_penalty = model.temperature_penalty(temp_penalty_decay)
+
             #log to wandb
             wandb.log(log_data)
             # ##################################   END MODDED   ############################################
@@ -381,9 +389,9 @@ while True:
             loss = loss / gradient_accumulation_steps # scale the loss to account for gradient accumulation
 
             # ####################################   MODDED   ############################################
-            if temperature_penalty != 0.0:
+            if temp_penalty_str != 0.0:
                 assert qk_weight_decay == 0.0, "temperature_penalty and qk_weight_decay should not be used together, they are different ways of penalizing high magnitudes of QK matrix"
-                loss += model.temperature_penalty(temperature_penalty)
+                loss += temp_penalty_str*model.temperature_penalty(temp_penalty_decay)
             # ##################################   END MODDED   ############################################
 
         # immediately async prefetch next batch while model is doing the forward pass on the GPU
