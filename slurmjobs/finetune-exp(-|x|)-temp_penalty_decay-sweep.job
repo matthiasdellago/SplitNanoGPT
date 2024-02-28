@@ -19,13 +19,13 @@ TEMP_PENALTY_DECAYS=(0.0000153 0.000153 0.00153 0.0153)
 # So if we want to start off with the same gradient for all, we should change str to be str/decay
 # We want str = 0.03
 # So we should set str = 0.03 / decay
-TEMP_PENALTY_STRS=(1961.0 196.1 19.6 1.961 0.1961)
+TEMP_PENALTY_STRS=(1961.0 196.1 19.6 1.961)
 QK_DECAY=0.0
 WEIGHT_DECAY=0.0
 
 ARG_FOR_ALL="--max_iters=25000 --wandb_project=openwebtext-finetune --weight_decay=$WEIGHT_DECAY --split=True --wandb_run_name=exp(-|x|)_temp_penalty_sweep --qk_weight_decay=$QK_DECAY"
 
-cd /home/mdellag/SplitNanoGPT/
+# cd /home/mdellag/SplitNanoGPT/
 
 # Environment setup
 source /home/mdellag/miniconda3/etc/profile.d/conda.sh    # Initialize Conda
@@ -34,7 +34,7 @@ conda activate nanoGPTenv                                 # Activate the desired
 
 
 # Extract the specific command based on the SLURM array task ID and ARG_FOR_ALL
-command="python3 /home/mdellag/SplitNanoGPT/split_train.py --temp_penalty_str=$${TEMP_PENALTY_STRS[$SLURM_ARRAY_TASK_ID]} --temp_penalty_decay=${TEMP_PENALTY_DECAYS[$SLURM_ARRAY_TASK_ID]}  $ARG_FOR_ALL"
+command="python3 /home/mdellag/SplitNanoGPT/split_train.py --temp_penalty_str=${TEMP_PENALTY_STRS[$SLURM_ARRAY_TASK_ID]} --temp_penalty_decay=${TEMP_PENALTY_DECAYS[$SLURM_ARRAY_TASK_ID]}  $ARG_FOR_ALL"
 
 # Echo the command to stdout for transparency
 echo "Running command: $command"
