@@ -25,7 +25,7 @@ WEIGHT_DECAY=0.0
 
 ARG_FOR_ALL="--max_iters=25000 --wandb_project=openwebtext-finetune --weight_decay=$WEIGHT_DECAY --split=True --wandb_run_name=exp(-|x|)_temp_penalty_sweep --qk_weight_decay=$QK_DECAY"
 
-# cd /home/mdellag/SplitNanoGPT/
+cd /home/mdellag/SplitNanoGPT/
 
 # Environment setup
 source /home/mdellag/miniconda3/etc/profile.d/conda.sh    # Initialize Conda
